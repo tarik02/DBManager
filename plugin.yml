@@ -1,0 +1,7 @@
+name: DBManager
+description: "DBManager"
+version: 1.0.0
+api: 2.0.0
+load: STARTUP
+main: GoldWill\DBManager\DBManager
+author: [ "Tarik02", "MrGenga" ]

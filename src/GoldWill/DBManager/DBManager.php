@@ -62,7 +62,7 @@ class DBManager extends PluginBase implements Listener
 		
 		$this->setup();
 		
-		$this->test();
+		//$this->test();
 	}
 	
 	public function onDisable()

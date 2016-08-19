@@ -55,7 +55,7 @@ class Query
 			do
 			{
 				$result = $mysqli->store_result();
-				$query = array_shift($queries);
+				$query = array_shift($queries) ?: '';
 				
 				if ($result instanceof \mysqli_result)
 				{

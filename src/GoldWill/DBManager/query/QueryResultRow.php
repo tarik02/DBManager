@@ -27,7 +27,7 @@ class QueryResultRow implements \ArrayAccess
 	 */
 	public function get(string $offset, int $type = self::TYPE_AUTO)
 	{
-		$value = $this->offsetGet($offset);
+		$value = (is_integer($offset) && ($offset >= 0) && ($offset < count($this->columns))) ? (array_values($this->columns)[$offset]) : (@$this->columns[$offset]);
 		
 		switch ($type)
 		{
@@ -110,7 +110,7 @@ class QueryResultRow implements \ArrayAccess
 	 */
 	public function offsetGet($offset)
 	{
-		return (is_integer($offset) && ($offset >= 0) && ($offset < count($this->columns))) ? (array_values($this->columns)[$offset]) : (@$this->columns[$offset]);
+		return $this->get($offset, self::TYPE_AUTO);
 	}
 	
 	/**
@@ -144,4 +144,11 @@ class QueryResultRow implements \ArrayAccess
 		throw new \RuntimeException('Cannot unset value in QueryResultRow');
 	}
 	
+	/**
+	 * @return array
+	 */
+	public function toArray() : array
+	{
+		return $this->columns;
+	}
 }

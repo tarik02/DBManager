@@ -38,20 +38,15 @@ class Query
 		
 		foreach ($this->parameters as $key => $value)
 		{
-			if (is_numeric($value))
-			{
-				$queries []= 'SET @' . $key . ' = ' . $value;
-			}
-			else
-			{
-				$queries []= 'SET @' . $key . ' = \'' . $mysqli->escape_string($value) . '\'';
-			}
+			$queries []= 'SET @' . $key . ' = ' . $this->parameterToQuery($value, $connectionConfig);
 		}
 		
 		foreach ($this->queries as $query)
 		{
 			$queries []= $query;
 		}
+		
+		//echo implode('; ' . PHP_EOL, $queries) . PHP_EOL;
 		
 		if ($mysqli->multi_query(implode('; ', $queries)))
 		{
@@ -111,5 +106,33 @@ class Query
 	public function __toString() : string
 	{
 		return 'Query(Parameters: ' . PHP_EOL . print_r($this->parameters, true) . PHP_EOL . 'Queries: ' . PHP_EOL . print_r($this->queries, true) . PHP_EOL . ')';
+	}
+	
+	/**
+	 * @param mixed $value
+	 * @param ConnectionConfig $connectionConfig
+	 *
+	 * @return string
+	 */
+	private function parameterToQuery($value, ConnectionConfig $connectionConfig)
+	{
+		if (is_numeric($value))
+		{
+			return $value;
+		}
+		elseif (is_string($value))
+		{
+			return '\'' . $connectionConfig->getConnection()->escape_string($value) . '\'';
+		}
+		elseif (is_null($value))
+		{
+			return 'NULL';
+		}
+		elseif ((is_object($value)) || (is_array($value)))
+		{
+			return '\'' . $connectionConfig->getConnection()->escape_string(json_encode($value)) . '\'';
+		}
+		
+		return '\'' . $connectionConfig->getConnection()->escape_string($value) . '\'';
 	}
 }

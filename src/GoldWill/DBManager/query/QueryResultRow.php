@@ -3,6 +3,13 @@ namespace GoldWill\DBManager\query;
 
 class QueryResultRow implements \ArrayAccess
 {
+	const TYPE_AUTO = -1;
+	const TYPE_INT = 0; const TYPE_INTEGER = 0;
+	const TYPE_FLOAT = 1; const TYPE_DOUBLE = 1;
+	const TYPE_STRING = 2;
+	const TYPE_JSON = 3;
+	
+	
 	/** @var array */
 	private $columns;
 	
@@ -10,6 +17,69 @@ class QueryResultRow implements \ArrayAccess
 	public function __construct(array $columns)
 	{
 		$this->columns = $columns;
+	}
+	
+	/**
+	 * @param string $offset
+	 * @param int $type
+	 *
+	 * @return mixed
+	 */
+	public function get(string $offset, int $type = self::TYPE_AUTO)
+	{
+		$value = $this->offsetGet($offset);
+		
+		switch ($type)
+		{
+		case self::TYPE_AUTO:
+			if ($value === 'NULL')
+			{
+				return null;
+			}
+			
+			if (ctype_digit(strval($value)))
+			{
+				return intval($value);
+			}
+			
+			if (is_numeric($value))
+			{
+				return floatval($value);
+			}
+			
+			try
+			{
+				$result = json_decode($value, true);
+				
+				if ($result === null)
+				{
+					if ($value === 'NULL')
+					{
+						return null;
+					}
+				}
+				else
+				{
+					return $result;
+				}
+			}
+			catch (\Exception $e)
+			{
+				
+			}
+			
+			return $value;
+		case self::TYPE_INT:
+			return intval($value);
+		case self::TYPE_FLOAT:
+			return floatval($value);
+		case self::TYPE_STRING:
+			return $value;
+		case self::TYPE_JSON:
+			return @json_decode($value, true);
+		default:
+			return $value;
+		}
 	}
 	
 	/**

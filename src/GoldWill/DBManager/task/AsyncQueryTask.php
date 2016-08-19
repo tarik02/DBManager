@@ -15,7 +15,7 @@ class AsyncQueryTask extends AsyncTask
 	/** @var Query|string */
 	private $query;
 	
-	/** @var QueryResult|QueryResult[]|string|null */
+	/** @var QueryResult|QueryResult[]|string|\Exception|null */
 	private $result = null;
 	
 	
@@ -43,6 +43,10 @@ class AsyncQueryTask extends AsyncTask
 			
 			$this->result = serialize($this->query->query($this->connectionConfig));
 		}
+		catch (\Exception $e)
+		{
+			$this->result = serialize($e);
+		}
 		finally
 		{
 			$this->query = null;
@@ -55,13 +59,20 @@ class AsyncQueryTask extends AsyncTask
 		{
 			$this->result = unserialize($this->result);
 			
-			try
+			if ($this->result instanceof \Exception)
 			{
-				$DBManager->handleQueryDone($this->queryId, $this->result);
+				$DBManager->getLogger()->error($this->result->getMessage());
 			}
-			catch (\Exception $e)
+			else
 			{
-				
+				try
+				{
+					$DBManager->handleQueryDone($this->queryId, $this->result);
+				}
+				catch (\Exception $e)
+				{
+					
+				}
 			}
 		}
 		finally

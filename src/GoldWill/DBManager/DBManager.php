@@ -203,16 +203,22 @@ class DBManager extends PluginBase implements Listener
 	
 	private function test()
 	{
-		for ($i = 0; $i < 10; $i++)
+		$this->queryAsync('SELECT @int, @float, @string, @null, @json', [
+			'int' => 15,
+		    'float' => 12.36,
+		    'string' => 'Hello slash \' "',
+		    'null' => null,
+		    'json' => json_encode([ 'hi', 'hi2' ])
+		], function(QueryResult $result)
 		{
-			$this->queryAsync('SELECT @number', [
-				'number' => $i
-			], function(QueryResult $result)
-			{
-				//var_dump($result->fetch());
-				$this->getLogger()->info($result->fetch()[0]);
-			});
-		}
+			$row = $result->fetch();
+			
+			var_dump($row->get('@int'));
+			var_dump($row->get('@float'));
+			var_dump($row->get('@string'));
+			var_dump($row->get('@null'));
+			var_dump($row->get('@json'));
+		});
 	}
 	
 	

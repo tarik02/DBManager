@@ -1,0 +1,16 @@
+mysql:
+ host: 'localhost'
+ port: 3306
+ username: 'root'
+ password: ''
+ database: 'mcpe'
+sync:
+ ping:
+  enable: false
+  interval: 1200
+async:
+ enable: true
+ workers: 1
+ ping:
+  enable: true
+  interval: 1200

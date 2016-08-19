@@ -171,9 +171,14 @@ class DBManager extends PluginBase implements Listener
 		
 		try
 		{
-			$results = (is_array($result)) ? ($result) : ([ $result ]);
+			$callback = $query->getCallback();
 			
-			call_user_func_array($query->getCallback(), $results);
+			if (is_callable($callback))
+			{
+				$results = (is_array($result)) ? ($result) : ([$result]);
+				
+				call_user_func_array($callback, $results);
+			}
 		}
 		catch (\Exception $e)
 		{

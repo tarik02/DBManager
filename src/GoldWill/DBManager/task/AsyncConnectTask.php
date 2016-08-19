@@ -35,7 +35,7 @@ class AsyncConnectTask extends AsyncTask
 		}
 		else
 		{
-			$DBManager->getLogger()->error($this->error);
+			$DBManager->getLogger()->error('Async connecting error: ' . $this->error);
 		}
 	}
 }

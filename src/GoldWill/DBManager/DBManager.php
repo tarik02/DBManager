@@ -187,6 +187,32 @@ class DBManager extends PluginBase implements Listener
 	}
 	
 	/**
+	 * @param int $queryId
+	 * @param \Exception $e
+	 */
+	public function handleQueryException(int $queryId, \Exception $e)
+	{
+		if (($query = @$this->asyncQueries[$queryId]) === null)
+		{
+			return;
+		}
+		
+		unset($this->asyncQueries[$queryId]);
+		
+		
+		try
+		{
+			//$callback = $query->getCallback();
+			
+			$this->getLogger()->error('Error in query' . PHP_EOL . $query->getQuery()->__toString() . ': ' . $e->__toString() . '.');
+		}
+		catch (\Exception $e)
+		{
+			$this->getLogger()->error('Error when handling query' . PHP_EOL . $query->getQuery()->__toString() . ': ' . $e->__toString() . '.');
+		}
+	}
+	
+	/**
 	 * @param AsyncTask $task
 	 * @param int $worker
 	 */

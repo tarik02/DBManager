@@ -58,7 +58,7 @@ abstract class AsyncTask extends PMAsyncTask
 				throw $e;
 			}
 			
-			$DBManager->getLogger()->error($e->getMessage());
+			$DBManager->getLogger()->error('Error when in handleCompletion: ' . $e->getMessage());
 		}
 		finally
 		{

@@ -57,22 +57,15 @@ class AsyncQueryTask extends AsyncTask
 	{
 		try
 		{
-			$this->result = unserialize($this->result);
+			$result = unserialize($this->result);
 			
 			if ($this->result instanceof \Exception)
 			{
-				$DBManager->getLogger()->error($this->result->getMessage());
+				$DBManager->handleQueryException($this->queryId, $result);
 			}
 			else
 			{
-				try
-				{
-					$DBManager->handleQueryDone($this->queryId, $this->result);
-				}
-				catch (\Exception $e)
-				{
-					
-				}
+				$DBManager->handleQueryDone($this->queryId, $result);
 			}
 		}
 		finally

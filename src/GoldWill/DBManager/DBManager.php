@@ -56,10 +56,13 @@ class DBManager extends PluginBase implements Listener
 	private $asyncQueryTaskCounter = 0;
 	
 	
-	public function onEnable()
+	public function onLoad()
 	{
 		$this->readConfig();
-		
+	}
+	
+	public function onEnable()
+	{
 		$this->setup();
 		
 		//$this->test();
@@ -232,24 +235,84 @@ class DBManager extends PluginBase implements Listener
 	}
 	
 	
+	private $tests = [  ];
+	
+	private function testBegin($name, $count = 1)
+	{
+		$this->tests[$name] = [ microtime(true), $count ];
+	}
+	
+	private function testEnd($name)
+	{
+		$test = $this->tests[$name];
+		
+		--$test[1];
+		
+		if ($test[1] !== 0)
+		{
+			$this->tests[$name] = $test;
+			return;
+		}
+		
+		unset($this->tests[$name]);
+		
+		$diff = microtime(true) - $test[0];
+		
+		
+		$this->getLogger()->info('Test \'' . $name . '\' done in ' . round($diff, 3) . ' seconds.');
+	}
+	
+	private function clearTests()
+	{
+		$this->tests = [  ];
+		
+		$this->queryAsync('TRUNCATE TABLE `benchmarking-table`');
+	}
+	
 	private function test()
 	{
-		$this->queryAsync('SELECT @int, @float, @string, @null, @json', [
-			'int' => 15,
-		    'float' => 12.36,
-		    'string' => 'Hello slash \' "',
-		    'null' => null,
-		    'json' => json_encode([ 'hi', 'hi2' ])
-		], function(QueryResult $result)
+		$this->clearTests();
+		$this->testSync();
+		
+		$this->clearTests();
+		$this->testAsync();
+	}
+	
+	private function testSync()
+	{
+		$this->testBegin('Sync create 5000 entries', 5000);
+		$this->testBegin('Sync create 5000 entries call');
+		
+		for ($i = 1; $i <= 5000; $i++)
 		{
-			$row = $result->fetch();
+			$this->querySync('INSERT INTO `benchmarking-table`(`number`, `hash`) VALUES(@number, @hash)', [
+				'number' => $i,
+				'hash' => md5($i)
+			]);
 			
-			var_dump($row->get('@int'));
-			var_dump($row->get('@float'));
-			var_dump($row->get('@string'));
-			var_dump($row->get('@null'));
-			var_dump($row->get('@json'));
-		});
+			$this->testEnd('Sync create 5000 entries');
+		}
+		
+		$this->testEnd('Sync create 5000 entries call');
+	}
+	
+	private function testAsync()
+	{
+		$this->testBegin('Async create 5000 entries', 5000);
+		$this->testBegin('Async create 5000 entries call');
+		
+		for ($i = 1; $i <= 5000; $i++)
+		{
+			$this->queryAsync('INSERT INTO `benchmarking-table`(`number`, `hash`) VALUES(@number, @hash)', [
+				'number' => $i,
+				'hash' => md5($i)
+			], function()
+			{
+				$this->testEnd('Async create 5000 entries');
+			});
+		}
+		
+		$this->testEnd('Async create 5000 entries call');
 	}
 	
 	

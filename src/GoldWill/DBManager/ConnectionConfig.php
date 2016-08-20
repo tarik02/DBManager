@@ -52,6 +52,7 @@ class ConnectionConfig
 			}
 			else
 			{
+				$connection->set_charset('utf8');
 				self::$connection = $connection;
 				
 				return $connection;

@@ -360,7 +360,10 @@ class DBManager extends PluginBase implements Listener
 				$results = [ $results ];
 			}
 			
-			call_user_func_array($callback, $results);
+			if (is_callable($callback))
+			{
+				call_user_func_array($callback, $results);
+			}
 		}
 	}
 	

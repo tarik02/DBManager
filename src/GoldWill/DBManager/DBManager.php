@@ -58,6 +58,8 @@ class DBManager extends PluginBase implements Listener
 	
 	public function onLoad()
 	{
+		Timings::init();
+		
 		$this->readConfig();
 	}
 	

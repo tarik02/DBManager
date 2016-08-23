@@ -66,7 +66,7 @@ abstract class AsyncTask extends PMAsyncTask
 		}
 		finally
 		{
-			$this->DBManager = null;
+			$DBManager = null;
 		}
 		
 		Timings::$asyncComplete->stopTiming();

@@ -3,6 +3,7 @@ namespace GoldWill\DBManager\task;
 
 use GoldWill\DBManager\ConnectionConfig;
 use GoldWill\DBManager\DBManager;
+use GoldWill\DBManager\Timings;
 use pocketmine\scheduler\AsyncTask as PMAsyncTask;
 use pocketmine\Server;
 
@@ -43,6 +44,8 @@ abstract class AsyncTask extends PMAsyncTask
 	
 	public function onCompletion(Server $server)
 	{
+		Timings::$asyncComplete->startTiming();
+		
 		$DBManager = null;
 		
 		try
@@ -55,6 +58,7 @@ abstract class AsyncTask extends PMAsyncTask
 		{
 			if ($DBManager === null)
 			{
+				Timings::$asyncComplete->stopTiming();
 				throw $e;
 			}
 			
@@ -64,6 +68,8 @@ abstract class AsyncTask extends PMAsyncTask
 		{
 			$this->DBManager = null;
 		}
+		
+		Timings::$asyncComplete->stopTiming();
 	}
 	
 	protected abstract function handleRun();

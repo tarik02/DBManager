@@ -5,6 +5,7 @@ use GoldWill\DBManager\ConnectionConfig;
 use GoldWill\DBManager\DBManager;
 use GoldWill\DBManager\query\Query;
 use GoldWill\DBManager\query\QueryResult;
+use GoldWill\DBManager\Timings;
 
 
 class AsyncQueryTask extends AsyncTask
@@ -55,6 +56,8 @@ class AsyncQueryTask extends AsyncTask
 	
 	public function handleCompetition(DBManager $DBManager)
 	{
+		Timings::$asyncQueryComplete->startTiming();
+		
 		try
 		{
 			$result = unserialize($this->result);
@@ -72,5 +75,7 @@ class AsyncQueryTask extends AsyncTask
 		{
 			$this->result = null;
 		}
+		
+		Timings::$asyncQueryComplete->stopTiming();
 	}
 }

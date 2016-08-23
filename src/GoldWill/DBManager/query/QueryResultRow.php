@@ -27,7 +27,7 @@ class QueryResultRow implements \ArrayAccess
 	 */
 	public function get(string $offset, int $type = self::TYPE_AUTO)
 	{
-		$value = (is_integer($offset) && ($offset >= 0) && ($offset < count($this->columns))) ? (array_values($this->columns)[$offset]) : (@$this->columns[$offset]);
+		$value = (is_integer($offset) && ($offset >= 0) && ($offset < count($this->columns))) ? (array_values($this->columns)[$offset]) : ((isset($this->columns[$offset])) ? ($this->columns[$offset]) : (null));
 		
 		switch ($type)
 		{
@@ -76,7 +76,7 @@ class QueryResultRow implements \ArrayAccess
 		case self::TYPE_STRING:
 			return $value;
 		case self::TYPE_JSON:
-			return @json_decode($value, true);
+			return json_decode($value, true);
 		default:
 			return $value;
 		}

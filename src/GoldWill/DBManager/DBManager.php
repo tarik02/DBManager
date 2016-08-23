@@ -166,11 +166,12 @@ class DBManager extends PluginBase implements Listener
 	 */
 	public function handleQueryDone(int $queryId, $result)
 	{
-		if (($query = @$this->asyncQueries[$queryId]) === null)
+		if (!isset($this->asyncQueries[$queryId]))
 		{
 			return;
 		}
 		
+		$query = $this->asyncQueries[$queryId];
 		unset($this->asyncQueries[$queryId]);
 		
 		
@@ -197,11 +198,12 @@ class DBManager extends PluginBase implements Listener
 	 */
 	public function handleQueryException(int $queryId, \Exception $e)
 	{
-		if (($query = @$this->asyncQueries[$queryId]) === null)
+		if (!isset($this->asyncQueries[$queryId]))
 		{
 			return;
 		}
 		
+		$query = $this->asyncQueries[$queryId];
 		unset($this->asyncQueries[$queryId]);
 		
 		

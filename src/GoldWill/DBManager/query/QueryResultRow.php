@@ -8,6 +8,7 @@ class QueryResultRow implements \ArrayAccess
 	const TYPE_FLOAT = 1; const TYPE_DOUBLE = 1;
 	const TYPE_STRING = 2;
 	const TYPE_JSON = 3;
+	const TYPE_BOOL = 4; const TYPE_BOOLEAN = 4;
 	
 	
 	/** @var array */
@@ -77,6 +78,8 @@ class QueryResultRow implements \ArrayAccess
 			return $value;
 		case self::TYPE_JSON:
 			return json_decode($value, true);
+		case self::TYPE_BOOL:
+			return intval($value) === 1;
 		default:
 			return $value;
 		}

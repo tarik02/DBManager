@@ -66,8 +66,6 @@ class DBManager extends PluginBase implements Listener
 	public function onEnable()
 	{
 		$this->setup();
-		
-		//$this->test();
 	}
 	
 	public function onDisable()
@@ -181,14 +179,23 @@ class DBManager extends PluginBase implements Listener
 			
 			if (is_callable($callback))
 			{
+				/** @var QueryResult[] $results */
 				$results = (is_array($result)) ? ($result) : ([$result]);
+				
+				foreach ($results as $result)
+				{
+					if ($result->hasError())
+					{
+						$this->getLogger()->info('Error ' . $result->getError() . ' happened in query: ' . $result->getQuery());
+					}
+				}
 				
 				call_user_func_array($callback, $results);
 			}
 		}
 		catch (\Exception $e)
 		{
-			$this->getLogger()->error('Error when handling query ' . PHP_EOL . $query->getQuery()->__toString() . ': ' . $e->__toString() . '.');
+			$this->getLogger()->error('Error when handling query ' . PHP_EOL . $query->getQuery()->toString($this->connectionConfig) . ': ' . $e->__toString() . '.');
 		}
 	}
 	
@@ -203,20 +210,21 @@ class DBManager extends PluginBase implements Listener
 			return;
 		}
 		
-		$query = $this->asyncQueries[$queryId];
+		$query = $this->asyncQueries[$queryId]->getQuery();
 		unset($this->asyncQueries[$queryId]);
 		
-		
-		try
-		{
-			//$callback = $query->getCallback();
-			
-			$this->getLogger()->error('Error in query' . PHP_EOL . $query->getQuery()->__toString() . ': ' . $e->__toString() . '.');
-		}
-		catch (\Exception $e)
-		{
-			$this->getLogger()->error('Error when handling query' . PHP_EOL . $query->getQuery()->__toString() . ': ' . $e->__toString() . '.');
-		}
+		$this->logError($e, $query);
+	}
+	
+	/**
+	 * @param \Exception $e
+	 *
+	 * @param Query $query
+	 */
+	private function logError(\Exception $e, Query $query)
+	{
+		$this->getLogger()->error('Error in query: ' . $query->toString($this->connectionConfig));
+		$this->getLogger()->logException($e);
 	}
 	
 	/**
@@ -239,88 +247,6 @@ class DBManager extends PluginBase implements Listener
 	}
 	
 	
-	private $tests = [  ];
-	
-	private function testBegin($name, $count = 1)
-	{
-		$this->tests[$name] = [ microtime(true), $count ];
-	}
-	
-	private function testEnd($name)
-	{
-		$test = $this->tests[$name];
-		
-		--$test[1];
-		
-		if ($test[1] !== 0)
-		{
-			$this->tests[$name] = $test;
-			return;
-		}
-		
-		unset($this->tests[$name]);
-		
-		$diff = microtime(true) - $test[0];
-		
-		
-		$this->getLogger()->info('Test \'' . $name . '\' done in ' . round($diff, 3) . ' seconds.');
-	}
-	
-	private function clearTests()
-	{
-		$this->tests = [  ];
-		
-		$this->queryAsync('TRUNCATE TABLE `benchmarking-table`');
-	}
-	
-	private function test()
-	{
-		$this->clearTests();
-		$this->testSync();
-		
-		$this->clearTests();
-		$this->testAsync();
-	}
-	
-	private function testSync()
-	{
-		$this->testBegin('Sync create 5000 entries', 5000);
-		$this->testBegin('Sync create 5000 entries call');
-		
-		for ($i = 1; $i <= 5000; $i++)
-		{
-			$this->querySync('INSERT INTO `benchmarking-table`(`number`, `hash`) VALUES(@number, @hash)', [
-				'number' => $i,
-				'hash' => md5($i)
-			]);
-			
-			$this->testEnd('Sync create 5000 entries');
-		}
-		
-		$this->testEnd('Sync create 5000 entries call');
-	}
-	
-	private function testAsync()
-	{
-		$this->testBegin('Async create 5000 entries', 5000);
-		$this->testBegin('Async create 5000 entries call');
-		
-		for ($i = 1; $i <= 5000; $i++)
-		{
-			$this->queryAsync('INSERT INTO `benchmarking-table`(`number`, `hash`) VALUES(@number, @hash)', [
-				'number' => $i,
-				'hash' => md5($i)
-			], function()
-			{
-				$this->testEnd('Async create 5000 entries');
-			});
-		}
-		
-		$this->testEnd('Async create 5000 entries call');
-	}
-	
-	
-	
 	/*
 	 * API part
 	 */
@@ -333,15 +259,24 @@ class DBManager extends PluginBase implements Listener
 	 */
 	public function querySync($query, array $parameters = null)
 	{
-		return QueryUtil::query($this->connectionConfig, new Query((is_array($query)) ? ($query) : ([ $query ]), $parameters));
+		$queryObject = new Query((is_array($query)) ? ($query) : ([$query]), $parameters);
+		
+		try
+		{
+			return QueryUtil::query($this->connectionConfig, $queryObject);
+		}
+		catch (\Exception $e)
+		{
+			$this->logError($e, $queryObject);
+			
+			return [  ];
+		}
 	}
 	
 	/**
 	 * @param string|string[] $query
 	 * @param array|null $parameters
 	 * @param callable|null $callback
-	 *
-	 * @return QueryResult|QueryResult[]
 	 */
 	public function queryAsync($query, array $parameters = null, callable $callback = null)
 	{
@@ -371,6 +306,11 @@ class DBManager extends PluginBase implements Listener
 		}
 	}
 	
+	/**
+	 * @param Server|null $server
+	 *
+	 * @return DBManager
+	 */
 	public static function getInstance(Server $server = null) : DBManager
 	{
 		if ($server === null)

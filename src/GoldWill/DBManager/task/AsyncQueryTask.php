@@ -6,6 +6,7 @@ use GoldWill\DBManager\DBManager;
 use GoldWill\DBManager\query\Query;
 use GoldWill\DBManager\query\QueryResult;
 use GoldWill\DBManager\Timings;
+use GoldWill\DBManager\util\QueryUtil;
 
 
 class AsyncQueryTask extends AsyncTask
@@ -42,7 +43,7 @@ class AsyncQueryTask extends AsyncTask
 		{
 			$this->query = unserialize($this->query);
 			
-			$this->result = serialize($this->query->query($this->connectionConfig));
+			$this->result = serialize(QueryUtil::query($this->connectionConfig, $this->query));
 		}
 		catch (\Exception $e)
 		{
@@ -62,7 +63,7 @@ class AsyncQueryTask extends AsyncTask
 		{
 			$result = unserialize($this->result);
 			
-			if ($this->result instanceof \Exception)
+			if ($result instanceof \Exception)
 			{
 				$DBManager->handleQueryException($this->queryId, $result);
 			}

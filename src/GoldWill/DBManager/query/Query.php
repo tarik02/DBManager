@@ -46,7 +46,7 @@ class Query
 			$queries []= $query;
 		}
 		
-		//echo implode('; ' . PHP_EOL, $queries) . PHP_EOL;
+		//echo implode(';' . PHP_EOL, $queries) . PHP_EOL;
 		
 		if ($mysqli->multi_query(implode('; ', $queries)))
 		{
@@ -101,11 +101,25 @@ class Query
 	}
 	
 	/**
+	 * @param ConnectionConfig $connectionConfig
+	 *
 	 * @return string
 	 */
-	public function __toString() : string
+	public function toString(ConnectionConfig $connectionConfig) : string
 	{
-		return 'Query(Parameters: ' . PHP_EOL . print_r($this->parameters, true) . PHP_EOL . 'Queries: ' . PHP_EOL . print_r($this->queries, true) . PHP_EOL . ')';
+		$queries = [  ];
+		
+		foreach ($this->parameters as $key => $value)
+		{
+			$queries []= 'SET @' . $key . ' = ' . $this->parameterToQuery($value, $connectionConfig);
+		}
+		
+		foreach ($this->queries as $query)
+		{
+			$queries []= $query;
+		}
+		
+		return implode(';' . PHP_EOL, $queries);
 	}
 	
 	/**

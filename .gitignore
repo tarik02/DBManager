@@ -1,3 +1,5 @@
 /config.yml
+/errorLog_createTable.sql
+/errorLog_insertError.sql
 
 .idea/*

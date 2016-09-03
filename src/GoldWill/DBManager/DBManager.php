@@ -11,6 +11,7 @@ use GoldWill\DBManager\task\AsyncTask;
 use GoldWill\DBManager\task\PingAsyncTask;
 use GoldWill\DBManager\task\PingSyncTask;
 use GoldWill\DBManager\task\UpdateTask;
+use GoldWill\DBManager\util\ErrorUtil;
 use GoldWill\DBManager\util\QueryUtil;
 use pocketmine\event\Listener;
 use pocketmine\plugin\PluginBase;
@@ -44,6 +45,19 @@ class DBManager extends PluginBase implements Listener
 	private $asyncPingInterval;
 	
 	
+	/** @var bool */
+	private $errorLogEnable;
+	
+	/** @var string */
+	private $errorLogTable;
+	
+	/** @var string */
+	private $errorLogCreateQuery;
+	
+	/** @var string */
+	private $errorLogInsertQuery;
+	
+	
 	/** @var AsyncPool */
 	private $asyncQueryPool;
 	
@@ -66,6 +80,9 @@ class DBManager extends PluginBase implements Listener
 	public function onEnable()
 	{
 		$this->setup();
+		
+		
+		$this->queryAsync('TURCATE TABLE `testTable`');
 	}
 	
 	public function onDisable()
@@ -77,6 +94,8 @@ class DBManager extends PluginBase implements Listener
 	{
 		$this->saveDefaultConfig();
 		$this->reloadConfig();
+		$this->saveResource('errorLog_createTable.sql');
+		$this->saveResource('errorLog_insertError.sql');
 		
 		$config = $this->getConfig();
 		
@@ -90,6 +109,16 @@ class DBManager extends PluginBase implements Listener
 		$this->asyncPingEnable = $config->getNested('async.ping.enable', true);
 		$this->asyncPingInterval = $config->getNested('async.ping.interval', 1200);
 		
+		$this->errorLogEnable = $config->getNested('errorLog.enable', true);
+		$this->errorLogTable = $config->getNested('errorLog.table', 'dbmanager_errors');
+		
+		$fileHandle = $this->getResource('errorLog_createTable.sql');
+		$this->errorLogCreateQuery = stream_get_contents($fileHandle);
+		fclose($fileHandle);
+		
+		$fileHandle = $this->getResource('errorLog_insertError.sql');
+		$this->errorLogInsertQuery = stream_get_contents($fileHandle);
+		fclose($fileHandle);
 	}
 	
 	private function setup()
@@ -136,6 +165,21 @@ class DBManager extends PluginBase implements Listener
 				$this->getLogger()->info('Scheduling async ping timer...');
 				
 				$this->getServer()->getScheduler()->scheduleDelayedRepeatingTask(new PingAsyncTask($this), $this->asyncPingInterval, $this->asyncPingInterval);
+			}
+		}
+		
+		
+		if ($this->errorLogEnable)
+		{
+			$query = str_replace('{table_name}', $this->errorLogTable, $this->errorLogCreateQuery);
+			
+			try
+			{
+				$this->querySync($query);
+			}
+			catch (\Exception $e)
+			{
+				$this->getLogger()->logException($e);
 			}
 		}
 	}
@@ -223,6 +267,16 @@ class DBManager extends PluginBase implements Listener
 	 */
 	private function logError(\Exception $e, Query $query)
 	{
+		if ($this->errorLogEnable)
+		{
+			$insertQuery = str_replace('{table_name}', $this->errorLogTable, $this->errorLogInsertQuery);
+			
+			$this->queryAsync($insertQuery, [
+				'query' => $query->toString($this->connectionConfig),
+			    'exception' => ErrorUtil::errorToString($e)
+			]);
+		}
+		
 		$this->getLogger()->error('Error in query: ' . $query->toString($this->connectionConfig));
 		$this->getLogger()->logException($e);
 	}

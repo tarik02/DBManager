@@ -9,21 +9,24 @@ A plugin for pocketmine that allows to use async mysql queries
 
 ## Config
 - `mysql` - mysql connection config
-	- `host` - address of mysql server('localhost' default)
-	- `port` - port of mysql server(3306 default)
-	- `username` - username to login to mysql server('root' default)
-	- `password` - password to login to mysql server(empty default)
+	- `host` - address of mysql server(default `'localhost'`)
+	- `port` - port of mysql server(default `3306`)
+	- `username` - username to login to mysql server(default `'root'`)
+	- `password` - password to login to mysql server(default empty)
 	- `database` - database to use
 - `sync` - syncronized connection config
 	- `ping` - sync ping config
-		- `enabled` - enables sync connection ping(default false)
-		- `interval` - interval between ping, in seconds(default 1200)
+		- `enabled` - enables sync connection ping(default `false`)
+		- `interval` - interval between ping, in seconds(default `1200`)
 - `async` - asynchronized connections config
-	- `enabled` - if false, will be used sync connection for async queries(default true)
-	- `workers` - count of async connections(default 1)
+	- `enabled` - if false, will be used sync connection for async queries(default `true`)
+	- `workers` - count of async connections(default `1`)
 	- `ping` - async connections ping config
-		- `enabled` - enables async connections ping(default true)
-		- `interval` - interval between ping, in seconds(default 1200)
+		- `enabled` - enables async connections ping(default `true`)
+		- `interval` - interval between ping, in seconds(default `1200`)
+- `errorLog` - error logging to database
+	- `enable` - enabled error logging to database(default `true`)
+	- `table` - table for error logging(default `dbmanager_errors`)
 
 ## API
 You can do sync and async queries. I'm recommend to use always only ASYNC queries excepts plugins startup. SYNC queries block all server operations.

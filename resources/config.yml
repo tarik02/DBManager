@@ -14,3 +14,6 @@ async:
  ping:
   enable: true
   interval: 1200
+errorLog:
+ enable: true
+ table: 'dbmanager_errors'

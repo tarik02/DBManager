@@ -80,9 +80,6 @@ class DBManager extends PluginBase implements Listener
 	public function onEnable()
 	{
 		$this->setup();
-		
-		
-		$this->queryAsync('TURCATE TABLE `testTable`');
 	}
 	
 	public function onDisable()

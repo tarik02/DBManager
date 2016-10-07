@@ -46,9 +46,10 @@ class Query
 			$queries []= $query;
 		}
 		
-		//echo implode(';' . PHP_EOL, $queries) . PHP_EOL;
+		$query = implode('; ', $queries);
+		array_splice($queries, 0, count($this->parameters));
 		
-		if ($mysqli->multi_query(implode('; ', $queries)))
+		if ($mysqli->multi_query($query))
 		{
 			$results = [];
 			
@@ -63,6 +64,7 @@ class Query
 					{
 						return new QueryResultRow($row);
 					}, $result->fetch_all(MYSQLI_ASSOC)), null, $query, null);
+					
 					$result->free();
 				}
 				elseif (($result === true) || ($mysqli->insert_id !== 0))
@@ -71,26 +73,27 @@ class Query
 				}
 				elseif ($result === false)
 				{
-					if ($mysqli->error)
+					if ($mysqli->insert_id !== 0)
+					{
+						$results [] = new QueryResult([  ], $mysqli->insert_id, $query, null);
+					}
+					else if (!empty($mysqli->error))
 					{
 						$results [] = new QueryResult([  ], null, $query, $mysqli->error);
-					}
-					elseif ($mysqli->warning_count > 0)
-					{
-						$warnings = $mysqli->get_warnings();
-						$warningArray = [  ];
-						
-						do
-						{
-							$warningArray []= $warnings->message;
-						}
-						while ($warnings->next());
-						
-						$results [] = new QueryResult([  ], null, $query, implode(PHP_EOL, $warningArray));
 					}
 				}
 			}
 			while (($mysqli->more_results()) && ($mysqli->next_result()));
+			
+			if ($result = $mysqli->query('SHOW WARNINGS'))
+			{
+				while ($row = $result->fetch_row())
+				{
+					$results [] = new QueryResult([], null, $query, sprintf("%s (%d): %s", $row[0], $row[1], $row[2]));
+				}
+				
+				$result->free();
+			}
 			
 			return (count($results) === 1) ? ($results[0]) : ($results);
 		}

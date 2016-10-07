@@ -85,7 +85,7 @@ class Query
 			}
 			while (($mysqli->more_results()) && ($mysqli->next_result()));
 			
-			if ($result = $mysqli->query('SHOW WARNINGS'))
+			/*if ($result = $mysqli->query('SHOW WARNINGS'))
 			{
 				while ($row = $result->fetch_row())
 				{
@@ -93,7 +93,7 @@ class Query
 				}
 				
 				$result->free();
-			}
+			}*/
 			
 			return (count($results) === 1) ? ($results[0]) : ($results);
 		}

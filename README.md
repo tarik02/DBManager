@@ -115,7 +115,8 @@ Column types:
  - `QueryResultRow::TYPE_FLOAT` or `QueryResultRow::TYPE_DOUBLE` - means floating point number
  - `QueryResultRow::TYPE_STRING` - means string
  - `QueryResultRow::TYPE_JSON` - means json value(can be anything)
-
+ - `QueryResultRow::TYPE_BOOL` or `QueryResultRow::TYPE_BOOLEAN` - means boolean value where `1` is `true`, other is `false`
+ - `QueryResultRow::TYPE_TIME` - means time that will be converted to timestamp using `strtotime`
 
 Get one column by name from row:
 
